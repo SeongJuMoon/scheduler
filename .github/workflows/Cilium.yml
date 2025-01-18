@@ -1,0 +1,46 @@
+name: Automate Cilium Helm Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch of cilium/cilium to use"
+        required: true
+        default: "main"
+jobs:
+  process_cilium:
+    runs-on: ubuntu-latest
+    outputs:
+      summary: ${{ steps.generate_summary.outputs.summary_text }}
+    steps:
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.15.0
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone cilium/cilium repository
+        run: |
+          git clone https://github.com/cilium/cilium.git
+          cd cilium
+          git checkout ${{ github.event.inputs.branch }}
+        shell: bash
+
+      - name: Run shell scripts and generate Helm templates
+        run: |
+          cd cilium
+          find ./examples/crds/* -type f -exec cat {} + | awk 'NR==1{print "---"} {print} NR>1 && /^---$/{next}' > crds.yaml
+          cd install/kubernetes
+          helm template cilium ./cilium --set config.someValue=someData > rendered-template.yaml
+        shell: bash
+
+      - name: Generate Summary
+        id: generate_summary
+        run: |
+          echo "summary_text<<EOF" >> $GITHUB_OUTPUT
+          echo "Setup Helm: Success" >> $GITHUB_OUTPUT
+          echo "Clone cilium/cilium branch: ${{ github.event.inputs.branch }} - Success" >> $GITHUB_OUTPUT
+          echo "Scripts and Helm templates: Executed Successfully" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        shell: bash
