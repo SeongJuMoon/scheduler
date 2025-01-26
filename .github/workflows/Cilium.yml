@@ -32,7 +32,7 @@ jobs:
           cd cilium
           find ./examples/crds/* -type f -exec cat {} + | awk 'NR==1{print "---"} {print} NR>1 && /^---$/{next}' > crds.yaml
           cd install/kubernetes
-          helm template cilium/cilium --version ${{ github.event.inputs.branch }} \
+          helm template cilium ./ \
           --namespace=kube-system \
           --set ipam.mode=kubernetes \
           --set ipv4NativeRoutingCIDR="172.16.0.0/16" \
