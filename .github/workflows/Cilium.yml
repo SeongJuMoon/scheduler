@@ -29,20 +29,20 @@ jobs:
 
       - name: Run shell scripts and generate Helm templates
         run: |
-          find ./examples/crds/* -type f -exec cat {} + | awk 'NR==1{print "---"} {print} NR>1 && /^---$/{next}' > crds.yaml
+          find ./examples/crds/* -type f -exec cat {} + | awk 'NR==1{print "---"} {print} NR>1 && /^---$/{next}' > /tmp/manifest.yaml
           cd install/kubernetes
-          helm template cilium ./ \
+          helm template cilium ./cilium \
           --namespace=kube-system \
           --set ipam.mode=kubernetes \
           --set ipv4NativeRoutingCIDR="172.16.0.0/16" \
-          --set l2announcements.enabled="true" \
-          --set kubeProxyReplacement="true" \
-          --set externalIPs.enabled="true" \
-          --set hubble.ui.enabled="true" \
-          --set hubble.relay.enabled="true" \
-          --set k8sServiceHost="192.168.1.10" \ 
+          --set l2announcements.enabled=true \
+          --set kubeProxyReplacement=true \
+          --set externalIPs.enabled=true \
+          --set hubble.ui.enabled=true \
+          --set hubble.relay.enabled=true \
+          --set k8sServiceHost="192.168.1.10" \
           --set k8sServicePort="6443" \
-          --set hubble.ui.frontend.server.ipv6.enabled=false > output.yml
+          --set hubble.ui.frontend.server.ipv6.enabled=false >> /tmp/manifest.yaml
         shell: bash
 
       - name: Generate Summary
