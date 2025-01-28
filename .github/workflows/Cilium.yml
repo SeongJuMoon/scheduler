@@ -45,12 +45,22 @@ jobs:
           --set hubble.ui.frontend.server.ipv6.enabled=false >> /tmp/manifest.yaml
         shell: bash
 
-      - name: Generate Summary
-        id: generate_summary
+      - name: Commit manifest to result directory
         run: |
-          echo "summary_text<<EOF" >> $GITHUB_OUTPUT
-          echo "Setup Helm: Success" >> $GITHUB_OUTPUT
-          echo "Clone cilium/cilium branch: ${{ github.event.inputs.branch }} - Success" >> $GITHUB_OUTPUT
-          echo "Scripts and Helm templates: Executed Successfully" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # 결과 디렉터리 생성
+          echo $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE && mkdir -p result
+          mv /tmp/manifest.yaml result/cilium-${{ github.event.inputs.branch }}.yaml
+
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          # 변경 사항을 Git에 추가
+          git add result/cilium-${{ github.event.inputs.branch }}.yaml
+
+          # 커밋 생성
+          git commit -m "Automated commit: Add generated manifest to result directory"
+
+          # 변경 사항을 원격 저장소에 푸시
+          git push origin ${{ github.event.inputs.branch }}
         shell: bash
